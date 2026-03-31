@@ -194,7 +194,9 @@ input[type=range]{flex:1;accent-color:var(--orange);height:4px;}
 .sum-thumb{width:42px;height:42px;border-radius:8px;overflow:hidden;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .sum-thumb img{width:100%;height:100%;object-fit:cover;}
 .sum-thumb svg{width:20px;height:20px;stroke:var(--hint);fill:none;stroke-width:1.6;}
-.sum-info{}
+.sum-info{
+  flex:1;
+}
 .sum-name{font-size:.88rem;font-weight:600;}
 .sum-opts{font-size:.76rem;color:var(--muted);}
 .form-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:2rem;}
@@ -460,8 +462,16 @@ footer strong{color:rgba(255,255,255,.8);}
 // ═══ SERVER CONFIG ═══
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyPeakOK1riRISgOG-6O4ZVTOj3b6_B7AS3UTJLxrFkj5Lv_k39NaWjCS-8nSc3sno/exec';
 
-// ═══ STORAGE HELPERS ═══
-const S = {get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+const DEFAULT_PRODUCTS = [
+  { id: 1, name: 'Portachiavi personalizzato', desc: 'Il tuo nome o logo in 3D. Perfetto per chiavi o zaini.', price: 'da 1,50€', tech: 'fdm', bg: '#fff8f5', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cG9seWdvbiBwb2ludHM9IjYgOSA2IDIgMTggMiAxOCA5Ii8+PHBhdGggZD0iTTYgMThINEFhMiAyIDAgMSAxIDJ2LTVhMiAyIDAgMCAxIDIgMmgxNmEyIDIgMCAwIDEgMiAydjVhMiAyIDAgMCAxLTIgMkg2Ii8+PHJlY3QgeD0iNiIgeT0iMTQiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4Ii8+PC9zdmc+', options: [{ label: 'Colore', choices: ['Bianco', 'Nero', 'Rosso', 'Blu', 'Verde', 'Giallo', 'Rosa'] }] },
+  { id: 2, name: 'Supporto smartphone', desc: 'Porta telefono da scrivania con design ergonomico.', price: 'da 3€', tech: 'fdm', bg: '#fff8f5', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIzIiB3aWR0aD0iMjAiIGhlaWdodD0iMTQiIHJ4PSIyIi8+PHBhdGggZD0iTTggMjFoOE0xMiAxN3Y0Ii8+PC9zdmc+', options: [{ label: 'Colore', choices: ['Bianco', 'Nero', 'Grigio', 'Blu'] }, { label: 'Orientamento', choices: ['Verticale', 'Orizzontale'] }] },
+  { id: 3, name: 'Miniatura in resina', desc: 'Figura decorativa ad alta definizione, perfetta per collezionisti.', price: 'da 5€', tech: 'resina', bg: '#f6f3ff', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cG9seWdvbiBwb2ludHM9IjEyIDIgMjIgOCA4IDIyIDIgMTYiLz48L3N2Zz4=', options: [{ label: 'Dimensione', choices: ['Piccola (~5cm)', 'Media (~10cm)', 'Grande (~15cm)'] }] },
+  { id: 4, name: 'Targhetta con nome', desc: 'Scritta 3D per scrivania o porta, personalizzata.', price: 'da 2€', tech: 'fdm', bg: '#fff8f5', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSI2IiB3aWR0aD0iMjAiIGhlaWdodD0iMTIiIHJ4PSIyIi8+PHRleHQgeD0iMTIiIHk9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjgiPk5BTUU8L3RleHQ+PC9zdmc+', options: [{ label: 'Colore', choices: ['Bianco', 'Nero', 'Oro', 'Argento'] }, { label: 'Dimensione', choices: ['Piccola', 'Media', 'Grande'] }] },
+  { id: 5, name: 'Portapenne organizer', desc: 'Contenitore modulare per scrivania, pratico e funzionale.', price: 'da 4€', tech: 'fdm', bg: '#fff8f5', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cG9seWdvbiBwb2ludHM9IjYgOSA2IDIgMTggMiAxOCA5Ii8+PHBhdGggZD0iTTYgMThINEFhMiAyIDAgMSAxIDJ2LTVhMiAyIDAgMCAxIDIgMmgxNmEyIDIgMCAwIDEgMiAydjVhMiAyIDAgMCAxLTIgMkg2Ii8+PHJlY3QgeD0iNiIgeT0iMTQiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4Ii8+PC9zdmc+', options: [{ label: 'Colore', choices: ['Bianco', 'Nero', 'Verde', 'Blu', 'Grigio'] }] },
+  { id: 6, name: 'Gioiello in resina', desc: 'Ciondoli e orecchini in resina traslucida.', price: 'da 3€', tech: 'resina', bg: '#f6f3ff', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI4Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSI4IiByPSI0Ii8+PC9zdmc+', options: [{ label: 'Tipo', choices: ['Ciondolo', 'Orecchini', 'Anello'] }, { label: 'Colore', choices: ['Trasparente', 'Bianco', 'Nero'] }] },
+  { id: 7, name: 'Incisione laser', desc: 'Logo o scritta su legno o acrilico, personalizzata.', price: 'da 2€', tech: 'laser', bg: '#fffbf0', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHJ4PSIyIi8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCIvPjxsaW5lIHgxPSI4IiB5MT0iOCIgeDI9IjE2IiB5Mj0iMTYiLz48L3N2Zz4=', options: [{ label: 'Materiale', choices: ['Legno', 'Acrilico'] }, { label: 'Dimensione', choices: ['Piccola', 'Media', 'Grande'] }] },
+  { id: 8, name: 'Progetto su misura', desc: 'Descrivi la tua idea, la realizziamo con cura.', price: 'preventivo', tech: 'custom', bg: '#f0fff6', img: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cG9seWdvbiBwb2ludHM9IjEyIDIgMjIgOCA4IDIyIDIgMTYiLz48cG9seWdvbiBwb2ludHM9IjEyIDIyIDIgMTYgMjIgMTYiLz48L3N2Zz4=', options: [{ label: 'Tecnologia', choices: ['FDM', 'Resina', 'Laser', 'Non so'] }] }
+];
 
 const DEFAULT_CONFIG = {prezzi:{prog:4.5,'fdm-pla':{ore:1.2,mat:0.018},'fdm-petg':{ore:1.4,mat:0.022},'fdm-abs':{ore:1.6,mat:0.020},'fdm-tpu':{ore:1.5,mat:0.030},'fdm-asa':{ore:1.5,mat:0.025},resina:{ore:4.5,ml:0.08},laser:{piccolo:2,medio:5,grande:10}}};
 
@@ -505,7 +515,7 @@ async function fetchProducts() {
   } catch (e) {
     console.warn('Products fetch failed', e);
   }
-  return S.get('v3d_products', []);
+  return S.get('v3d_products', DEFAULT_PRODUCTS);
 }
 
 // ═══ APPLY CONFIG ═══
