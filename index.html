@@ -510,12 +510,20 @@ async function fetchProducts() {
     if (res.ok) {
       const data = await res.json();
       S.set('v3d_products', data);
-      return data;
+      if (data && data.length > 0) {
+        return data;
+      }
     }
   } catch (e) {
     console.warn('Products fetch failed', e);
   }
-  return S.get('v3d_products', DEFAULT_PRODUCTS);
+  const cached = S.get('v3d_products', null);
+  if (cached && cached.length > 0) {
+    return cached;
+  }
+  // Forza default se niente altro
+  S.set('v3d_products', DEFAULT_PRODUCTS);
+  return DEFAULT_PRODUCTS;
 }
 
 // ═══ APPLY CONFIG ═══
@@ -830,6 +838,7 @@ function goTo(page) {
   renderMaterials();
   await calcola();
   showStatus('✓ Connesso al server', 'success');
+  console.log('Store 3D loaded - Products:', await fetchProducts());
 })();
 </script>
 </body>
