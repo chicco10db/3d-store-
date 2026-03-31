@@ -209,6 +209,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;dis
       <div class="fg"><label>Nome *</label><input type="text" id="m-name" placeholder="es. Portachiavi"></div>
       <div class="fg"><label>Descrizione *</label><textarea id="m-desc" placeholder="Breve descrizione..."></textarea></div>
       <div class="fg"><label>Immagine (URL)</label><input type="text" id="m-img" placeholder="https://..."></div>
+      <div class="fg"><label>Carica immagine</label><input type="file" id="m-img-file" accept="image/*"></div>
+      <div class="fg" id="m-img-preview" style="min-height:80px;display:flex;align-items:center;gap:8px;"></div>
       <div class="fg"><label>Prezzo indicativo</label><input type="text" id="m-price" placeholder="da 1,50€"></div>
       <div class="fg"><label>Categoria</label>
         <select id="m-tech">
@@ -262,6 +264,10 @@ async function initApp() {
   loadConfig();
   renderDashboard();
   setInterval(() => {updateNewBadge();}, 8000);
+
+  document.getElementById('m-img').addEventListener('input', updateImagePreview);
+  document.getElementById('m-img-file').addEventListener('change', updateImagePreview);
+  updateImagePreview();
 }
 
 async function loadConfig() {
@@ -364,16 +370,67 @@ function closeProdModal() {
   document.getElementById('prod-modal').classList.remove('open');
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Lettura file immagine fallita'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function updateImagePreview() {
+  const preview = document.getElementById('m-img-preview');
+  const imgUrl = document.getElementById('m-img').value.trim();
+  const fileInput = document.getElementById('m-img-file');
+  preview.innerHTML = '';
+
+  if (fileInput.files && fileInput.files[0]) {
+    const dataUrl = await fileToDataUrl(fileInput.files[0]);
+    const imgEl = document.createElement('img');
+    imgEl.src = dataUrl;
+    imgEl.style.maxWidth = '90px';
+    imgEl.style.maxHeight = '60px';
+    imgEl.style.objectFit = 'cover';
+    preview.appendChild(imgEl);
+    return;
+  }
+
+  if (imgUrl) {
+    const imgEl = document.createElement('img');
+    imgEl.src = imgUrl;
+    imgEl.style.maxWidth = '90px';
+    imgEl.style.maxHeight = '60px';
+    imgEl.style.objectFit = 'cover';
+    imgEl.onerror = () => { preview.textContent = 'URL immagine non valido'; };
+    preview.appendChild(imgEl);
+    return;
+  }
+  preview.textContent = 'Nessuna immagine selezionata';
+}
+
 async function saveProduct() {
   const name = document.getElementById('m-name').value.trim();
   const desc = document.getElementById('m-desc').value.trim();
-  const img = document.getElementById('m-img').value.trim();
+  const imgInputUrl = document.getElementById('m-img').value.trim();
+  const imgFile = document.getElementById('m-img-file').files[0];
   const price = document.getElementById('m-price').value.trim();
   const tech = document.getElementById('m-tech').value;
-  
+
   if (!name) {
     alert('Nome prodotto obbligatorio');
     return;
+  }
+
+  let img = imgInputUrl;
+  if (imgFile) {
+    try {
+      img = await fileToDataUrl(imgFile);
+    } catch (e) {
+      console.warn('File immagine non valido', e);
+      alert('Impossibile leggere il file immagine. Usa un URL valido.');
+      return;
+    }
   }
 
   const data = {name, desc, price, tech, img: img || '', bg: '#fff8f5', options: []};
@@ -397,8 +454,16 @@ async function saveProduct() {
       products = await fetchProducts();
       renderProdTable();
       closeProdModal();
+      showStatus('Prodotto salvato con successo', 'success');
+    } else {
+      const errText = await res.text();
+      showStatus('Errore salvataggio prodotto: ' + errText, 'error');
+      console.error('Save product failed', res.status, errText);
     }
-  } catch (e) {console.error('Save product failed', e);}
+  } catch (e) {
+    console.error('Save product failed', e);
+    showStatus('Errore salvataggio prodotto', 'error');
+  }
 }
 
 async function deleteProd(id) {
